@@ -1,5 +1,5 @@
-Work in progress. Not functional currently.
+A currently non-functional work in progress.
 
-Gives the link to every submission in a subreddit.
+The aim of this project is to give a link to every submission in a subreddit.
 
-MIT license. Check out LICENSE.md for more info.
+Licensed under MIT. Please check out LICENSE for more info.
