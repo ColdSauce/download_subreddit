@@ -7,7 +7,7 @@ import time
 TOTAL_SUBMISSIONS = 1000 
 POSTS_PER_PAGE = 25
 TOTAL_PAGES = TOTAL_SUBMISSIONS / POSTS_PER_PAGE
-BASE_REDDIT_URL = "http://reddit.com/r/strawmen/new/"
+BASE_REDDIT_URL = "http://reddit.com/r/strawmen/hot/"
 REDDIT_RATE_LIMIT_SECS = 2
 
 # get_page lets you get a specific page in the subreddit's /new/ category
@@ -37,10 +37,10 @@ def get_page_from_raw_url(url):
 # useful to me atm. However, I will make this more general in 
 # the future.
 def get_submissions_from_soup(soup_data):
-    submissions = []
+    submissions = set() 
     for a in soup_data.findAll('a', href=True):
         if 'http://i.imgur.com' in str(a['href']):
-            submissions.append(str(a['href']))
+            submissions.add(str(a['href']))
     return submissions
 
 # get_next_url_from_soup gets the url of the page after the 
@@ -50,7 +50,33 @@ def get_next_url_from_soup(soup_data):
         if 'next' in str(a.contents[0]):
             return str(a['href'])
 
+def get_search_from_to(f, t):
+    BASE_SEARCH_URL = "https://www.reddit.com/r/strawmen/search"
+    payload = {'sort':'new',
+               'q' : 'timestamp:{}..{}'.format(f,t),
+               'restrict_sr': 'on',
+               'syntax': 'cloudsearch'}
+    user_agent = {'User-agent': 'Mozilla/5.0'}
+    r = requests.get(BASE_SEARCH_URL, params=payload, headers=user_agent)
+    return r
+    
 
+def search_main():
+    submission_set = set()
+    STEP = 8 * 60 * 60
+    START = 1415858099
+    END = 1449986099
+    for count in range(START, END, STEP):
+        print "have this many more: " + str(END - count)
+        print "% done: " + str((count) / (END))
+        print "time left: " + str((((END - count)/STEP) * 3) / 60) + " minutes"
+        search_result = get_search_from_to(count, count + STEP).text
+        soup = BeautifulSoup(search_result)
+        submission_set = submission_set | get_submissions_from_soup(soup)
+        time.sleep(2)
+    with open('search_submissions.txt', 'w') as f:
+            for submission in all_submissions:
+                f.write(str(submission) + "\n")
 def main():
 
     all_submissions = []
@@ -80,10 +106,10 @@ def main():
             time.sleep(REDDIT_RATE_LIMIT_SECS)
 
     except:
-        with open('submissions.txt', 'w') as f:
+        with open('hot_submissions.txt', 'w') as f:
             for submission in all_submissions:
                 f.write(str(submission) + "\n")
 
 
 if __name__ == "__main__":
-    main()
+    search_main()
